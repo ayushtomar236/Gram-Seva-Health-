@@ -1,0 +1,23 @@
+# Node
+node_modules/
+dist/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# ML Models & Datasets
+*.pkl
+*.pt
+*.pth
+*.h5
+ml training/
+
+# OS
+.DS_Store

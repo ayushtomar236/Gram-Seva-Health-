@@ -1,0 +1,17 @@
+{
+  "site_package_search_strategy": "pep561",
+  "search_path": [
+    "."
+  ],
+  "source_directories": [
+    "."
+  ],
+  "exclude": [
+    ".venv"
+  ],
+  "python_version": "3.14",
+  "venv": ".venv",
+  "venv_search_path": [
+    "."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/ai-models/skin/.venv/bin/python3",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/ai-models/skin/.venv/lib/python3.14/site-packages"
+  ],
+  "python.analysis.pythonPath": "${workspaceFolder}/ai-models/skin/.venv/bin/python3",
+  "python.envFile": "${workspaceFolder}/ai-models/skin/.env",
+  "pylance.enableExperimentalFeatures": false
+}

@@ -1,0 +1,8 @@
+{
+  "venvPath": "ai-models/skin",
+  "venv": ".venv",
+  "pythonVersion": "3.14",
+  "pythonPlatform": "Darwin",
+  "include": ["ai-models"],
+  "exclude": ["**/__pycache__"]
+}

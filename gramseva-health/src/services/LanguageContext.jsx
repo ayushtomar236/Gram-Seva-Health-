@@ -73,7 +73,7 @@ const translations = {
         footerDisclaimer: 'This is an AI assistant, please visit a doctor',
 
         // Symptom Chips
-        chips: ['Fever', 'Headache', 'Cough', 'Stomach Pain', 'Weakness'],
+        chips: ['Fever', 'Headache', 'Cough', 'Stomach Pain', 'Weakness', 'Chills', 'Vomiting', 'Fatigue', 'High Fever', 'Nausea', 'Constipation', 'Abdominal Pain', 'Diarrhoea', 'Toxic Look', 'Belly Pain', 'Acidity', 'Indigestion', 'Blurred Vision', 'Excessive Hunger', 'Depression', 'Irritability', 'Visual Disturbances'],
 
         // Symptom Input Page
         symptomAnalysis: 'AI Symptom Analysis',
@@ -218,7 +218,7 @@ const translations = {
         footerDisclaimer: 'यह AI सहायक है, कृपया डॉक्टर से ज़रूर मिलें',
 
         // Symptom Chips
-        chips: ['बुखार', 'सिर दर्द', 'खांसी', 'पेट दर्द', 'कमज़ोरी'],
+        chips: ['बुखार', 'सिर दर्द', 'खांसी', 'पेट दर्द', 'कमज़ोरी', 'ठंड लगना', 'उल्टी', 'थकान', 'तेज़ बुखार', 'जी मिचलाना', 'कब्ज', 'पेट दर्द', 'दस्त', 'बीमार दिखना', 'पेट में दर्द', 'एसिडिटी', 'अपच', 'धुंधला दिखना', 'बहुत भूख लगना', 'तनाव', 'चिड़चिड़ापन', 'देखने में परेशानी'],
 
         // Symptom Input Page
         symptomAnalysis: 'AI लक्षण विश्लेषण',

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiabetesAssessment from '../components/DiabetesAssessment';
+import HealthScoreCalculator from '../components/HealthScoreCalculator';
 
 /* ── Static Tailwind color maps (JIT can't resolve dynamic `bg-${color}-50`) ── */
 const COLOR_CLASSES = {
@@ -116,13 +117,14 @@ export default function PatientDashboard() {
 
     // ── Health Score Logic ──────────────────────────────────────────────────
     const [healthScore, setHealthScore] = useState(0);
+    const [showCalculator, setShowCalculator] = useState(false);
+
     useEffect(() => {
+        // Fallback basic health score calc if not updated via calculator
+        if (healthScore !== 0) return; // keep calculated score if available
         let score = 0;
-        // Water goal: 8 glasses (max 30 points)
         score += Math.min(30, (waterCount / 8) * 30);
-        // Sleep goal: 8 hours (max 30 points)
         score += Math.min(30, (sleepHours / 8) * 30);
-        // Vitals (normal ranges check) (max 40 points)
         let vitalsPass = 0;
         if (vitals.heartRate >= 60 && vitals.heartRate <= 100) vitalsPass += 10;
         if (vitals.bpSys >= 90 && vitals.bpSys <= 130) vitalsPass += 10;
@@ -130,7 +132,7 @@ export default function PatientDashboard() {
         if (vitals.spo2 >= 95) vitalsPass += 10;
         score += vitalsPass;
         setHealthScore(Math.round(score));
-    }, [waterCount, sleepHours, vitals]);
+    }, [waterCount, sleepHours, vitals, healthScore]);
 
     // ── Reminders ───────────────────────────────────────────────────────────
     const [reminders, setReminders] = useState(() => {
@@ -299,7 +301,12 @@ export default function PatientDashboard() {
                                             <span className="text-[10px] font-black uppercase tracking-tighter text-teal-100">Score</span>
                                         </div>
                                     </div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest mt-2 text-teal-200">{t('healthScore')}</p>
+                                    <button 
+                                        onClick={() => setShowCalculator(true)}
+                                        className="mt-3 px-4 py-2 bg-teal-700/50 hover:bg-teal-700 border border-teal-500 rounded-full text-[10px] font-black uppercase tracking-widest text-teal-100 transition shadow-inner"
+                                    >
+                                        Detailed Calc
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -708,6 +715,12 @@ export default function PatientDashboard() {
                 <Link to="/health-news" className="flex flex-col items-center text-gray-400 group"><Newspaper className="w-6 h-6 group-hover:text-orange-500" /><span className="text-[10px] font-black mt-1">NEWS</span></Link>
                 <Link to="/hospitals" className="flex flex-col items-center text-gray-400 group"><Building2 className="w-6 h-6 group-hover:text-cyan-500" /><span className="text-[10px] font-black mt-1">HOSPITAL</span></Link>
             </div>
+
+            <HealthScoreCalculator 
+                isOpen={showCalculator} 
+                onClose={() => setShowCalculator(false)} 
+                onScoreCalculated={(s) => setHealthScore(s)} 
+            />
         </div>
     );
 }

@@ -177,15 +177,37 @@ HINDI_SYNONYMS = {
 def text_to_vector(symptom_text: str) -> np.ndarray:
     """Convert free-text symptom description to binary symptom vector."""
     vec = np.zeros(len(SYMPTOM_COLUMNS), dtype=int)
-    text_lower = symptom_text.lower()
+    
+    translated_text = symptom_text.lower()
+    
+    # Use Gemini to extract standard exact SYMPTOM_COLUMNS if loaded
+    if GEMINI_LOADED:
+        prompt = f"""
+        Extract the exact medical symptoms from the following patient description.
+        The description might be in Hindi, English, Devanagari script, or Hinglish.
+        Translate and map them ONLY to the following exact comma-separated list of allowed symptom names:
+        {", ".join(SYMPTOM_COLUMNS)}
+        
+        Patient description: "{symptom_text}"
+        
+        Return ONLY a comma-separated list of matching allowed symptom names. Do not include any other text.
+        """
+        try:
+            response = gemini_model.generate_content(prompt)
+            if response.text:
+                translated_text = response.text.lower()
+                log.info(f"Gemini translated symptoms: {translated_text}")
+        except Exception as e:
+            log.warning(f"Gemini translation failed: {e}")
 
+    # Fallback / process the translated text against columns
     # Apply Hindi synonym substitutions
     for hindi, english in HINDI_SYNONYMS.items():
-        if hindi in text_lower:
-            text_lower = text_lower.replace(hindi, english)
+        if hindi in translated_text:
+            translated_text = translated_text.replace(hindi, english)
 
     # Normalize text
-    text_normalized = re.sub(r"[\s\-]+", "_", text_lower)
+    text_normalized = re.sub(r"[\s\-]+", "_", translated_text)
 
     for i, col in enumerate(SYMPTOM_COLUMNS):
         col_lower = col.lower().strip()
@@ -195,50 +217,12 @@ def text_to_vector(symptom_text: str) -> np.ndarray:
             continue
         # Word-by-word match
         words = [w for w in re.split(r"[_\s]+", col_lower) if len(w) > 3]
-        if words and all(w in text_lower for w in words):
+        if words and all(w in translated_text for w in words):
             vec[i] = 1
 
     return vec
 
 # ─── MEDICAL REPORT GENERATION ───────────────────────────────────────────────
-
-def get_medical_report(predicted_disease: str, symptoms_text: str) -> dict:
-    """
-    Generate a comprehensive 12-section medical report using ONE Gemini call.
-    Includes retry with backoff to handle rate limiting on the free tier.
-    """
-    prompt = f"""
-You are a medical information assistant.
-
-Provide concise structured information about: {predicted_disease}
-
-Rules:
-- Keep total response under 300 words.
-- Each section must be 1–3 short sentences only.
-- Use simple language for rural patients.
-- Avoid technical jargon.
-- No long explanations.
-- Do not repeat information.
-- Do not provide personalized advice.
-- Add one-line disclaimer at end.
-
-Structure exactly as:
-
-1. Name
-2. Definition
-3. Causes
-4. Risk Factors
-5. What Happens in the Body
-6. Symptoms
-7. Diagnosis
-8. Treatment
-9. Complications
-10. Prevention
-11. Prognosis
-12. Epidemiology
-
-Be clear, brief, and structured.
-"""
 
 # ─── STATIC MEDICAL KNOWLEDGE BASE ──────────────────────────────────────────
 # Comprehensive reports for all 41 diseases — works without any API key.
@@ -1281,6 +1265,39 @@ def get_medical_report(predicted_disease: str, symptoms_text: str) -> dict:
     if not GEMINI_LOADED:
         log.info(f"Gemini not available — using static knowledge base for: {predicted_disease}")
         return _build_from_kb(predicted_disease)
+
+    prompt = f"""
+You are a medical information assistant.
+
+Provide concise structured information about: {predicted_disease}
+
+Rules:
+- Keep total response under 300 words.
+- Each section must be 1–3 short sentences only.
+- Use simple language for rural patients.
+- Avoid technical jargon.
+- No long explanations.
+- Do not repeat information.
+- Do not provide personalized advice.
+- Add one-line disclaimer at end.
+
+Structure exactly as:
+
+1. Name
+2. Definition
+3. Causes
+4. Risk Factors
+5. What Happens in the Body
+6. Symptoms
+7. Diagnosis
+8. Treatment
+9. Complications
+10. Prevention
+11. Prognosis
+12. Epidemiology
+
+Be clear, brief, and structured.
+"""
 
     # ── Helper: safely get text from a Gemini response ──
     def get_text(resp):

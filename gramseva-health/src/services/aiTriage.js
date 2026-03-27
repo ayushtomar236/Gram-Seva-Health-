@@ -21,7 +21,7 @@ export async function analyzeSymptoms(symptomsText) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ symptoms: symptomsText }),
-            signal: AbortSignal.timeout(10000), // 10s — ML-only, very fast
+            signal: AbortSignal.timeout(30000), // Increased to 30s to allow Gemini translation
         });
 
         if (!response.ok) {
@@ -35,9 +35,9 @@ export async function analyzeSymptoms(symptomsText) {
             source: 'ml_model',
         };
     } catch (error) {
-        // If backend is unreachable, fall back to client-side rules
-        if (error.name === 'AbortError' || error.name === 'TypeError' || error.message.includes('fetch')) {
-            console.warn('⚠️ ML backend unreachable, using client-side fallback');
+        // If backend is unreachable or times out, fall back to client-side rules
+        if (error.name === 'AbortError' || error.name === 'TimeoutError' || error.name === 'TypeError' || error.message.includes('fetch') || error.message.includes('signal timed out')) {
+            console.warn('⚠️ ML backend unreachable or timed out, using client-side fallback');
             return analyzeSymptomsFallback(symptomsText);
         }
         throw error;

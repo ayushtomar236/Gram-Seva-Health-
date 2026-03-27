@@ -275,6 +275,63 @@ export default function HealthLibrary() {
         else setBmiMsg(lang === 'hi' ? 'मोटापा (Obese)' : 'Obese');
     };
 
+    // WtH Ratio State
+    const [wthWaist, setWthWaist] = useState('');
+    const [wthHeight, setWthHeight] = useState('');
+    const [wthResult, setWthResult] = useState(null);
+    const [wthMsg, setWthMsg] = useState('');
+
+    const calculateWtH = () => {
+        const w = parseFloat(wthWaist);
+        const h = parseFloat(wthHeight);
+        if (!w || !h || h === 0) return;
+        const ratio = (w / h).toFixed(2);
+        setWthResult(ratio);
+        if (ratio <= 0.5) setWthMsg(lang === 'hi' ? 'स्वस्थ' : 'Healthy');
+        else if (ratio <= 0.60) setWthMsg(lang === 'hi' ? 'बढ़ा हुआ जोखिम' : 'Increased Risk');
+        else setWthMsg(lang === 'hi' ? 'उच्च जोखिम' : 'High Risk');
+    };
+
+    // BFP State
+    const [bfpGender, setBfpGender] = useState('male');
+    const [bfpHeight, setBfpHeight] = useState('');
+    const [bfpWaist, setBfpWaist] = useState('');
+    const [bfpNeck, setBfpNeck] = useState('');
+    const [bfpHip, setBfpHip] = useState('');
+    const [bfpResult, setBfpResult] = useState(null);
+    const [bfpMsg, setBfpMsg] = useState('');
+
+    const calculateBFP = () => {
+        const h = parseFloat(bfpHeight);
+        const w = parseFloat(bfpWaist);
+        const n = parseFloat(bfpNeck);
+        if (!h || !w || !n || h <= 0 || w <= n) return;
+        let bfp;
+        if (bfpGender === 'male') {
+            bfp = 495 / (1.0324 - 0.19077 * Math.log10(w - n) + 0.15456 * Math.log10(h)) - 450;
+        } else {
+            const hip = parseFloat(bfpHip);
+            if (!hip) return;
+            bfp = 495 / (1.29579 - 0.35004 * Math.log10(w + hip - n) + 0.22100 * Math.log10(h)) - 450;
+        }
+        const val = bfp.toFixed(1);
+        setBfpResult(val);
+        // Category thresholds differ by gender
+        if (bfpGender === 'male') {
+            if (bfp < 6) setBfpMsg(lang === 'hi' ? 'आवश्यक वसा' : 'Essential Fat');
+            else if (bfp < 14) setBfpMsg(lang === 'hi' ? 'एथलीट' : 'Athlete');
+            else if (bfp < 18) setBfpMsg(lang === 'hi' ? 'फिटनेस' : 'Fitness');
+            else if (bfp < 25) setBfpMsg(lang === 'hi' ? 'स्वीकार्य' : 'Acceptable');
+            else setBfpMsg(lang === 'hi' ? 'मोटापा (Obese)' : 'Obese');
+        } else {
+            if (bfp < 14) setBfpMsg(lang === 'hi' ? 'आवश्यक वसा' : 'Essential Fat');
+            else if (bfp < 21) setBfpMsg(lang === 'hi' ? 'एथलीट' : 'Athlete');
+            else if (bfp < 25) setBfpMsg(lang === 'hi' ? 'फिटनेस' : 'Fitness');
+            else if (bfp < 32) setBfpMsg(lang === 'hi' ? 'स्वीकार्य' : 'Acceptable');
+            else setBfpMsg(lang === 'hi' ? 'मोटापा (Obese)' : 'Obese');
+        }
+    };
+
     const t = (en, hi) => (lang === 'hi' ? hi : en);
 
     return (
@@ -392,6 +449,159 @@ export default function HealthLibrary() {
                                                 {bmiMsg}
                                             </span>
                                         </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* WtH Ratio Calculator */}
+                        <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center">
+                                    <Activity className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-gray-900">{t('Waist-to-Height Ratio', 'कमर-ऊंचाई अनुपात')}</h3>
+                                    <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{t('Abdominal Obesity & Cardiovascular Risk', 'पेट की चर्बी और हृदय जोखिम')}</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-400 font-medium mb-6 ml-1">{t('Use the same unit (cm or inches) for both measurements.', 'दोनों मापों में एक ही इकाई (सेमी या इंच) का उपयोग करें।')}</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">{t('Waist Circumference', 'कमर की परिधि')}</label>
+                                    <input
+                                        type="number"
+                                        placeholder={t('e.g. 80 cm', 'जैसे 80 सेमी')}
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-bold"
+                                        value={wthWaist}
+                                        onChange={(e) => setWthWaist(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">{t('Height', 'ऊंचाई')}</label>
+                                    <input
+                                        type="number"
+                                        placeholder={t('e.g. 170 cm', 'जैसे 170 सेमी')}
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-bold"
+                                        value={wthHeight}
+                                        onChange={(e) => setWthHeight(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex items-end">
+                                    <button
+                                        onClick={calculateWtH}
+                                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition shadow-lg shadow-indigo-600/20 active:scale-95"
+                                    >
+                                        {t('Calculate', 'गणना करें')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* WtH Interpretation guide */}
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                {[
+                                    { label: t('≤ 0.50 — Healthy', '≤ 0.50 — स्वस्थ'), color: 'green' },
+                                    { label: t('0.51–0.60 — Increased Risk', '0.51–0.60 — बढ़ा जोखिम'), color: 'amber' },
+                                    { label: t('≥ 0.61 — High Risk', '≥ 0.61 — उच्च जोखिम'), color: 'red' },
+                                ].map((b) => (
+                                    <span key={b.label} className={`px-3 py-1 rounded-full text-[10px] font-black bg-${b.color}-50 text-${b.color}-700`}>{b.label}</span>
+                                ))}
+                            </div>
+
+                            <AnimatePresence>
+                                {wthResult && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="mt-6 p-6 bg-indigo-50 rounded-3xl border border-indigo-100 flex items-center justify-between"
+                                    >
+                                        <div>
+                                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">{t('YOUR WtH RATIO', 'आपका WtH अनुपात')}</p>
+                                            <h4 className="text-2xl font-black text-indigo-900">{wthResult}</h4>
+                                        </div>
+                                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase ${
+                                            wthMsg === 'Healthy' || wthMsg === 'स्वस्थ' ? 'bg-green-100 text-green-700' :
+                                            wthMsg === 'Increased Risk' || wthMsg === 'बढ़ा हुआ जोखिम' ? 'bg-amber-100 text-amber-700' :
+                                            'bg-red-100 text-red-700'
+                                        }`}>{wthMsg}</span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Body Fat Percentage Calculator */}
+                        <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-violet-50 rounded-2xl flex items-center justify-center">
+                                    <HeartPulse className="w-5 h-5 text-violet-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-gray-900">{t('Body Fat Percentage', 'शरीर में वसा प्रतिशत')}</h3>
+                                    <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest">{t('U.S. Navy Circumference Method', 'यू.एस. नेवी परिधि विधि')}</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-400 font-medium mb-6 ml-1">{t('All measurements in centimetres (cm).', 'सभी माप सेंटीमीटर (सेमी) में।')}</p>
+
+                            {/* Gender Toggle */}
+                            <div className="flex gap-3 mb-6">
+                                {['male', 'female'].map((g) => (
+                                    <button
+                                        key={g}
+                                        onClick={() => { setBfpGender(g); setBfpResult(null); setBfpHip(''); }}
+                                        className={`flex-1 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition ${bfpGender === g ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30' : 'bg-gray-50 text-gray-500'}`}
+                                    >
+                                        {g === 'male' ? t('Male', 'पुरुष') : t('Female', 'महिला')}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">{t('Height (cm)', 'ऊंचाई (सेमी)')}</label>
+                                    <input type="number" placeholder="170" className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-violet-500/20 font-bold text-sm" value={bfpHeight} onChange={(e) => setBfpHeight(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">{t('Waist (cm)', 'कमर (सेमी)')}</label>
+                                    <input type="number" placeholder="80" className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-violet-500/20 font-bold text-sm" value={bfpWaist} onChange={(e) => setBfpWaist(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">{t('Neck (cm)', 'गर्दन (सेमी)')}</label>
+                                    <input type="number" placeholder="37" className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-violet-500/20 font-bold text-sm" value={bfpNeck} onChange={(e) => setBfpNeck(e.target.value)} />
+                                </div>
+                                {bfpGender === 'female' && (
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase ml-2">{t('Hip (cm)', 'कूल्हे (सेमी)')}</label>
+                                        <input type="number" placeholder="95" className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-violet-500/20 font-bold text-sm" value={bfpHip} onChange={(e) => setBfpHip(e.target.value)} />
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={calculateBFP}
+                                className="mt-6 w-full py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-2xl transition shadow-lg shadow-violet-600/20 active:scale-95"
+                            >
+                                {t('Calculate Body Fat %', 'शरीर में वसा % की गणना करें')}
+                            </button>
+
+                            <AnimatePresence>
+                                {bfpResult && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="mt-6 p-6 bg-violet-50 rounded-3xl border border-violet-100 flex items-center justify-between"
+                                    >
+                                        <div>
+                                            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-1">{t('YOUR BODY FAT', 'आपकी शरीर की वसा')}</p>
+                                            <h4 className="text-2xl font-black text-violet-900">{bfpResult}%</h4>
+                                        </div>
+                                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase ${
+                                            bfpMsg === 'Obese' || bfpMsg === 'मोटापा (Obese)' ? 'bg-red-100 text-red-700' :
+                                            bfpMsg === 'Acceptable' || bfpMsg === 'स्वीकार्य' ? 'bg-amber-100 text-amber-700' :
+                                            'bg-green-100 text-green-700'
+                                        }`}>{bfpMsg}</span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>

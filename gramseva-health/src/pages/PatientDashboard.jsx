@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import DiabetesAssessment from '../components/DiabetesAssessment';
 import HealthScoreCalculator from '../components/HealthScoreCalculator';
+import KnownMedicinesPanel from '../components/KnownMedicinesPanel';
 
 /* ── Static Tailwind color maps (JIT can't resolve dynamic `bg-${color}-50`) ── */
 const COLOR_CLASSES = {
@@ -193,6 +194,16 @@ export default function PatientDashboard() {
             const { data: h } = await supabase.from('consultations').select('*, doctors(name, specialization)')
                 .eq('patient_id', p.id).order('created_at', { ascending: false }).limit(5);
             setHistory(h || []);
+            // Load known medicines from Supabase (merge with localStorage)
+            if (p.known_medicines && Array.isArray(p.known_medicines) && p.known_medicines.length > 0) {
+                const lsKey = 'gramseva-known-medicines';
+                const lsData = (() => { try { return JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch { return []; } })();
+                // Supabase wins for cloud data; merge keeping local entries not yet synced
+                const merged = [...p.known_medicines];
+                lsData.forEach(lm => { if (!merged.find(m => m.name.toLowerCase() === lm.name.toLowerCase())) merged.push(lm); });
+                localStorage.setItem(lsKey, JSON.stringify(merged));
+                setKnownMedicines(merged);
+            }
         }
     };
 
@@ -204,6 +215,19 @@ export default function PatientDashboard() {
     // ── Health ID Card ──────────────────────────────────────────────────────
     const [showHealthID, setShowHealthID] = useState(false);
     const healthID = patient?.id ? `GS-${patient.id.slice(0, 8).toUpperCase()}` : 'GS-PENDING';
+
+    // ── Known Medicines ─────────────────────────────────────────────────────
+    const [showMedicinesPanel, setShowMedicinesPanel] = useState(false);
+    const [knownMedicines, setKnownMedicines] = useState([]);
+
+    const syncMedicinesToSupabase = async (medicines) => {
+        if (!patient?.id) return;
+        try {
+            await supabase.from('patients').update({ known_medicines: medicines }).eq('id', patient.id);
+        } catch (e) {
+            console.warn('Could not sync medicines to Supabase:', e);
+        }
+    };
 
     const handleQuickTriage = async () => {
         if (!quickSymptoms.trim()) return;
@@ -434,7 +458,7 @@ export default function PatientDashboard() {
                                     { icon: Building2, title: t('hospitals'), desc: t('hospitalsDesc'), to: '/hospitals', color: 'cyan' },
                                     { icon: BookOpen, title: t('healthLibrary') || 'Health Library', desc: t('healthLibDesc') || 'First aid & health tips', to: '/health-library', color: 'indigo' },
                                     { icon: FileText, title: t('records'), desc: t('recordsDesc'), scroll: 'history-section', color: 'purple' },
-                                    { icon: Pill, title: t('medicines'), desc: t('medicinesDesc'), to: '/symptoms', color: 'emerald' },
+                                    { icon: Pill, title: 'Known Medicines', desc: 'Track & manage your medicines', click: 'medicines', color: 'emerald' },
                                     { icon: AlertTriangle, title: t('sos'), desc: t('sosDesc'), click: 'sos', color: 'red' },
                                 ].map((s, i) => {
                                     const Icon = s.icon;
@@ -450,6 +474,7 @@ export default function PatientDashboard() {
                                     if (s.to) return <Link key={i} to={s.to}>{Content}</Link>;
                                     if (s.scroll) return <button key={i} onClick={() => document.getElementById(s.scroll)?.scrollIntoView({ behavior: 'smooth' })} className="text-left w-full h-full">{Content}</button>;
                                     if (s.click === 'sos') return <button key={i} onClick={() => { if (confirm((t('sos') || 'SOS').toString().toUpperCase() + '?')) window.open('tel:108'); }} className="text-left w-full h-full">{Content}</button>;
+                                    if (s.click === 'medicines') return <button key={i} onClick={() => setShowMedicinesPanel(true)} className="text-left w-full h-full">{Content}</button>;
                                     return <div key={i}>{Content}</div>;
                                 })}
                             </div>
@@ -720,6 +745,12 @@ export default function PatientDashboard() {
                 isOpen={showCalculator} 
                 onClose={() => setShowCalculator(false)} 
                 onScoreCalculated={(s) => setHealthScore(s)} 
+            />
+            <KnownMedicinesPanel
+                isOpen={showMedicinesPanel}
+                onClose={() => setShowMedicinesPanel(false)}
+                patientId={patient?.id}
+                onSyncSupabase={syncMedicinesToSupabase}
             />
         </div>
     );

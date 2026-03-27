@@ -1507,6 +1507,205 @@ def generate_report(disease: str):
         detailed_report=result.get("detailed_report", f"# {disease}\n\nReport unavailable."),
     )
 
+
+# ─── INDIA MEDICINE DATASET ───────────────────────────────────────────────────
+# Curated list of ~60 common medicines used in India (A–Z).
+# high_risk = True means severe side effects warrant extra caution.
+INDIA_MEDICINES = [
+    {"name": "Aceclofenac 100mg", "salt": "Aceclofenac", "used_for": "Pain, Arthritis, Inflammation", "side_effects": ["Nausea", "Stomach pain", "Gastric ulcer risk", "Dizziness"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Aciloc 150", "salt": "Ranitidine", "used_for": "Acidity, GERD, Peptic Ulcer", "side_effects": ["Headache", "Dizziness", "Constipation"], "manufacturer": "Cadila", "high_risk": False},
+    {"name": "Allegra 120mg", "salt": "Fexofenadine", "used_for": "Allergy, Urticaria, Hay fever", "side_effects": ["Headache", "Nausea", "Drowsiness"], "manufacturer": "Sanofi", "high_risk": False},
+    {"name": "Alprazolam 0.25mg", "salt": "Alprazolam", "used_for": "Anxiety, Panic disorder", "side_effects": ["Drowsiness", "Dependence", "Memory problems", "Depression"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Amlodipine 5mg", "salt": "Amlodipine", "used_for": "Hypertension, Angina", "side_effects": ["Swelling ankles", "Flushing", "Dizziness", "Headache"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Amoxicillin 500mg", "salt": "Amoxicillin", "used_for": "Bacterial infections, Throat infection, UTI", "side_effects": ["Diarrhea", "Rash", "Nausea", "Allergic reaction"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Aspirin 75mg", "salt": "Aspirin (Acetylsalicylic acid)", "used_for": "Heart attack prevention, Blood clot prevention, Pain", "side_effects": ["Stomach bleeding", "Nausea", "Ringing in ears"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Atenolol 50mg", "salt": "Atenolol", "used_for": "Hypertension, Angina, Heart failure", "side_effects": ["Fatigue", "Cold hands/feet", "Dizziness", "Bradycardia"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Azithromycin 500mg", "salt": "Azithromycin", "used_for": "Respiratory infections, Typhoid, Skin infections", "side_effects": ["Nausea", "Diarrhea", "Abdominal pain", "QT prolongation"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Becosules", "salt": "Vitamin B Complex + Vitamin C", "used_for": "Vitamin deficiency, General health", "side_effects": ["Nausea (high dose)", "Urine discoloration"], "manufacturer": "Pfizer", "high_risk": False},
+    {"name": "Betadine", "salt": "Povidone-Iodine", "used_for": "Wound disinfection, Skin antiseptic", "side_effects": ["Skin irritation", "Allergy (rare)"], "manufacturer": "Win-Medicare", "high_risk": False},
+    {"name": "Calpol 500", "salt": "Paracetamol", "used_for": "Fever, Pain, Headache", "side_effects": ["Liver damage (overdose)", "Nausea", "Rash (rare)"], "manufacturer": "GSK", "high_risk": False},
+    {"name": "Cetirizine 10mg", "salt": "Cetirizine", "used_for": "Allergy, Urticaria, Rhinitis", "side_effects": ["Drowsiness", "Dry mouth", "Headache"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Ciprofloxacin 500mg", "salt": "Ciprofloxacin", "used_for": "UTI, Typhoid, Diarrhea, Skin infections", "side_effects": ["Nausea", "Diarrhea", "Tendon damage (rare)", "Photosensitivity"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Clonazepam 0.5mg", "salt": "Clonazepam", "used_for": "Epilepsy, Panic disorder, Anxiety", "side_effects": ["Drowsiness", "Dependence", "Memory issues", "Depression"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Combiflam", "salt": "Ibuprofen + Paracetamol", "used_for": "Pain, Fever, Inflammation, Headache", "side_effects": ["Stomach irritation", "Nausea", "Gastric ulcer risk"], "manufacturer": "Sanofi", "high_risk": False},
+    {"name": "Crocin 500", "salt": "Paracetamol", "used_for": "Fever, Pain, Headache, Cold", "side_effects": ["Liver damage (overdose)", "Nausea", "Rash (rare)"], "manufacturer": "GSK", "high_risk": False},
+    {"name": "D-Cold Total", "salt": "Paracetamol + Phenylephrine + Cetirizine", "used_for": "Cold, Flu, Blocked nose, Fever", "side_effects": ["Drowsiness", "Dry mouth", "Nausea", "BP increase"], "manufacturer": "Wockhardt", "high_risk": False},
+    {"name": "Dexamethasone 0.5mg", "salt": "Dexamethasone", "used_for": "Inflammation, Allergic reactions, Asthma", "side_effects": ["Weight gain", "High blood sugar", "Osteoporosis", "Immune suppression"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Digoxin 0.25mg", "salt": "Digoxin", "used_for": "Heart failure, Atrial fibrillation", "side_effects": ["Nausea", "Vision changes", "Bradycardia", "Arrhythmia (toxicity)"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Disprin", "salt": "Aspirin", "used_for": "Pain, Fever, Headache, Heart attack (emergency)", "side_effects": ["Stomach bleeding", "Nausea", "Ringing in ears"], "manufacturer": "Reckitt", "high_risk": True},
+    {"name": "Dolo 650", "salt": "Paracetamol", "used_for": "Fever, Pain, COVID symptoms, Headache", "side_effects": ["Liver damage (overdose)", "Nausea", "Rash (rare)"], "manufacturer": "Micro Labs", "high_risk": False},
+    {"name": "Domperidone 10mg", "salt": "Domperidone", "used_for": "Nausea, Vomiting, Bloating, GERD", "side_effects": ["Headache", "Dry mouth", "Rare cardiac effects"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Enalapril 5mg", "salt": "Enalapril", "used_for": "Hypertension, Heart failure", "side_effects": ["Dry cough", "Dizziness", "Hyperkalemia", "Kidney issues"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Eno Fruit Salt", "salt": "Sodium Bicarbonate + Citric Acid", "used_for": "Acidity, Indigestion, Heartburn", "side_effects": ["Bloating", "Belching", "High sodium (excess use)"], "manufacturer": "GSK", "high_risk": False},
+    {"name": "Fluconazole 150mg", "salt": "Fluconazole", "used_for": "Fungal infections, Candidiasis, Ringworm", "side_effects": ["Nausea", "Headache", "Liver toxicity (rare)", "Skin rash"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Glycomet 500", "salt": "Metformin", "used_for": "Type 2 Diabetes", "side_effects": ["Nausea", "Diarrhea", "Lactic acidosis (rare)", "Vitamin B12 deficiency"], "manufacturer": "USV", "high_risk": False},
+    {"name": "Ibuprofen 400mg", "salt": "Ibuprofen", "used_for": "Pain, Fever, Inflammation, Arthritis", "side_effects": ["Stomach pain", "Nausea", "Gastric ulcer", "Kidney issues"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Isomil", "salt": "Omeprazole + Domperidone", "used_for": "GERD, Acidity, Gastritis", "side_effects": ["Headache", "Diarrhea", "Nausea", "Dry mouth"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Januvia 50mg", "salt": "Sitagliptin", "used_for": "Type 2 Diabetes", "side_effects": ["Nasopharyngitis", "Headache", "Pancreatitis (rare)"], "manufacturer": "MSD", "high_risk": False},
+    {"name": "Ketoconazole Cream", "salt": "Ketoconazole", "used_for": "Fungal skin infection, Dandruff", "side_effects": ["Skin irritation", "Itching", "Liver toxicity (oral form)"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Levocetirizine 5mg", "salt": "Levocetirizine", "used_for": "Allergy, Urticaria, Rhinitis", "side_effects": ["Drowsiness", "Dry mouth", "Headache"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Lisinopril 5mg", "salt": "Lisinopril", "used_for": "Hypertension, Heart failure, Diabetic nephropathy", "side_effects": ["Dry cough", "Dizziness", "Hyperkalemia"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Losartan 50mg", "salt": "Losartan", "used_for": "Hypertension, Heart failure, Kidney protection in diabetes", "side_effects": ["Dizziness", "Hyperkalemia", "Kidney issues", "Hypotension"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Meftal Spas", "salt": "Mefenamic Acid + Dicyclomine", "used_for": "Menstrual pain, Stomach cramps, Spasms", "side_effects": ["Nausea", "Diarrhea", "Dizziness", "Drowsiness"], "manufacturer": "Blue Cross", "high_risk": False},
+    {"name": "Metformin 500mg", "salt": "Metformin", "used_for": "Type 2 Diabetes, PCOS", "side_effects": ["Nausea", "Diarrhea", "Lactic acidosis (rare)", "Vitamin B12 deficiency"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Metrogyl 400", "salt": "Metronidazole", "used_for": "Bacterial infections, Amoebiasis, Giardiasis, Dental infections", "side_effects": ["Nausea", "Metallic taste", "Dizziness", "Alcohol intolerance"], "manufacturer": "J.B. Chemicals", "high_risk": False},
+    {"name": "Montair LC", "salt": "Montelukast + Levocetirizine", "used_for": "Allergic rhinitis, Asthma", "side_effects": ["Drowsiness", "Headache", "Dry mouth", "Mood changes"], "manufacturer": "Cipla", "high_risk": False},
+    {"name": "Mucinac 600", "salt": "N-Acetylcysteine", "used_for": "Cough with mucus, Chest congestion, Paracetamol overdose antidote", "side_effects": ["Nausea", "Vomiting", "Rash"], "manufacturer": "Cipla", "high_risk": False},
+    {"name": "Nifedipine 10mg", "salt": "Nifedipine", "used_for": "Hypertension, Angina, Raynaud's phenomenon", "side_effects": ["Flushing", "Headache", "Dizziness", "Palpitations"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Nimesulide 100mg", "salt": "Nimesulide", "used_for": "Pain, Fever, Inflammation", "side_effects": ["Liver toxicity", "Nausea", "Stomach pain", "Rash"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Norflox 400", "salt": "Norfloxacin", "used_for": "UTI, Diarrhea, Gastroenteritis", "side_effects": ["Nausea", "Dizziness", "Headache", "Photosensitivity"], "manufacturer": "Cipla", "high_risk": False},
+    {"name": "ORS (Electral)", "salt": "Oral Rehydration Salts", "used_for": "Dehydration, Diarrhea, Vomiting", "side_effects": ["Nausea (if too concentrated)"], "manufacturer": "FDC", "high_risk": False},
+    {"name": "Omeprazole 20mg", "salt": "Omeprazole", "used_for": "GERD, Peptic Ulcer, Acidity", "side_effects": ["Headache", "Diarrhea", "Nausea", "Vitamin B12 deficiency (long-term)"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Ondansetron 4mg", "salt": "Ondansetron", "used_for": "Nausea, Vomiting, Chemotherapy-induced nausea", "side_effects": ["Headache", "Constipation", "QT prolongation (rare)"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Paracetamol 500mg", "salt": "Paracetamol", "used_for": "Fever, Pain, Headache", "side_effects": ["Liver damage (overdose)", "Nausea", "Rash (rare)"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Pantoprazole 40mg", "salt": "Pantoprazole", "used_for": "GERD, Peptic Ulcer, Acidity, Zollinger-Ellison syndrome", "side_effects": ["Headache", "Diarrhea", "Nausea", "Bone fractures (long-term)"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Paroex 20mg", "salt": "Paroxetine", "used_for": "Depression, Anxiety, OCD, PTSD", "side_effects": ["Nausea", "Drowsiness", "Weight gain", "Sexual dysfunction", "Withdrawal effects"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Phenobarbitone 30mg", "salt": "Phenobarbital", "used_for": "Epilepsy, Seizure disorder", "side_effects": ["Drowsiness", "Dependence", "Memory issues", "Bone loss"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Prednisolone 5mg", "salt": "Prednisolone", "used_for": "Inflammation, Allergic reactions, Asthma, Autoimmune diseases", "side_effects": ["Weight gain", "High blood sugar", "Osteoporosis", "Mood changes", "Immune suppression"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Rabeprazole 20mg", "salt": "Rabeprazole", "used_for": "GERD, Peptic Ulcer, Acidity", "side_effects": ["Headache", "Diarrhea", "Nausea", "Flatulence"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Rosuvastatin 10mg", "salt": "Rosuvastatin", "used_for": "High cholesterol, Heart disease prevention", "side_effects": ["Muscle pain", "Liver issues", "Headache", "Nausea"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Salbutamol Inhaler", "salt": "Salbutamol (Albuterol)", "used_for": "Asthma, COPD, Bronchospasm", "side_effects": ["Tremors", "Palpitations", "Headache", "Hypokalemia"], "manufacturer": "Various", "high_risk": False},
+    {"name": "Shelcal 500", "salt": "Calcium Carbonate + Vitamin D3", "used_for": "Calcium deficiency, Osteoporosis, Bone health", "side_effects": ["Constipation", "Bloating", "Nausea (high dose)", "Kidney stones (excess)"], "manufacturer": "Elder Pharma", "high_risk": False},
+    {"name": "Sinarest", "salt": "Paracetamol + Phenylephrine + Chlorpheniramine", "used_for": "Cold, Nasal congestion, Runny nose, Fever", "side_effects": ["Drowsiness", "Dry mouth", "Nausea", "BP increase"], "manufacturer": "Centaur", "high_risk": False},
+    {"name": "Telma 40", "salt": "Telmisartan", "used_for": "Hypertension, Heart failure, Diabetic nephropathy", "side_effects": ["Dizziness", "Hyperkalemia", "Back pain", "Sinusitis"], "manufacturer": "Glenmark", "high_risk": False},
+    {"name": "Thyronorm 50mcg", "salt": "Levothyroxine", "used_for": "Hypothyroidism, Thyroid replacement therapy", "side_effects": ["Palpitations", "Weight loss", "Sweating", "Insomnia (overdose)"], "manufacturer": "Abbott", "high_risk": False},
+    {"name": "Voveran SR 100", "salt": "Diclofenac", "used_for": "Pain, Arthritis, Inflammation, Muscle pain", "side_effects": ["Stomach pain", "Nausea", "Gastric ulcer", "Cardiovascular risk"], "manufacturer": "Novartis", "high_risk": False},
+    {"name": "Warfarin 5mg", "salt": "Warfarin", "used_for": "Blood clot prevention, Atrial fibrillation, DVT", "side_effects": ["Bleeding risk", "Internal bleeding", "Bruising", "Drug/food interactions"], "manufacturer": "Various", "high_risk": True},
+    {"name": "Zincovit", "salt": "Multivitamins + Zinc", "used_for": "Vitamin & mineral deficiency, Immunity boost, Growth", "side_effects": ["Nausea (high dose)", "Constipation"], "manufacturer": "Apex", "high_risk": False},
+    {"name": "Zolpidem 10mg", "salt": "Zolpidem", "used_for": "Insomnia, Sleep disorders", "side_effects": ["Drowsiness", "Dependence", "Memory blackouts", "Sleep-walking"], "manufacturer": "Various", "high_risk": True},
+]
+
+# Build a salt→brands index for grouping
+_SALT_TO_BRANDS: dict[str, list[str]] = {}
+for _m in INDIA_MEDICINES:
+    _salt_key = _m["salt"].lower().strip()
+    _SALT_TO_BRANDS.setdefault(_salt_key, []).append(_m["name"])
+
+
+def _normalize_name(name: str) -> str:
+    """Lowercase, strip, collapse whitespace."""
+    return re.sub(r"\s+", " ", name.lower().strip())
+
+
+def _find_medicine(query: str) -> dict | None:
+    """
+    Find a medicine by name or salt.
+    Returns the best match (case-insensitive, prefix-aware) or None.
+    """
+    q = _normalize_name(query)
+    # Exact name match
+    for m in INDIA_MEDICINES:
+        if _normalize_name(m["name"]) == q:
+            return m
+    # Name startswith
+    for m in INDIA_MEDICINES:
+        if _normalize_name(m["name"]).startswith(q):
+            return m
+    # Query inside name
+    for m in INDIA_MEDICINES:
+        if q in _normalize_name(m["name"]):
+            return m
+    # Salt match
+    for m in INDIA_MEDICINES:
+        if q in _normalize_name(m["salt"]):
+            return m
+    return None
+
+
+def _enrich_medicine(raw_name: str) -> dict:
+    """Look up and enrich a medicine; graceful fallback for unknowns."""
+    match = _find_medicine(raw_name)
+    if match:
+        brands = _SALT_TO_BRANDS.get(match["salt"].lower().strip(), [match["name"]])
+        return {
+            "name": match["name"],
+            "salt": match["salt"],
+            "used_for": match["used_for"],
+            "side_effects": match["side_effects"],
+            "manufacturer": match.get("manufacturer", "Not Available"),
+            "high_risk": match.get("high_risk", False),
+            "alternate_brands": [b for b in brands if b != match["name"]],
+            "status": "unknown",  # status is managed by frontend
+        }
+    return {
+        "name": raw_name,
+        "salt": "Not Available",
+        "used_for": "Not Available",
+        "side_effects": [],
+        "manufacturer": "Not Available",
+        "high_risk": False,
+        "alternate_brands": [],
+        "status": "unknown",
+    }
+
+
+# ─── MEDICINE API MODELS ──────────────────────────────────────────────────────
+class MedicineLookupRequest(BaseModel):
+    names: list[str]
+
+
+class MedicineSearchResult(BaseModel):
+    name: str
+    salt: str
+    used_for: str
+    side_effects: list[str]
+    manufacturer: str
+    high_risk: bool
+    alternate_brands: list[str]
+    status: str = "unknown"
+
+
+# ─── MEDICINE ENDPOINTS ───────────────────────────────────────────────────────
+
+@app.get("/api/medicines/search")
+def search_medicines(q: str = ""):
+    """
+    Autocomplete search endpoint.
+    GET /api/medicines/search?q=para  → returns matching medicines (top 10).
+    """
+    if not q or len(q.strip()) < 1:
+        return {"results": []}
+    query = _normalize_name(q)
+    results = []
+    seen_names: set[str] = set()
+    for m in INDIA_MEDICINES:
+        name_n = _normalize_name(m["name"])
+        salt_n = _normalize_name(m["salt"])
+        used_n = _normalize_name(m["used_for"])
+        if (query in name_n or query in salt_n or query in used_n) and m["name"] not in seen_names:
+            seen_names.add(m["name"])
+            results.append({
+                "name": m["name"],
+                "salt": m["salt"],
+                "used_for": m["used_for"],
+                "side_effects": m["side_effects"],
+                "manufacturer": m.get("manufacturer", "Not Available"),
+                "high_risk": m.get("high_risk", False),
+                "alternate_brands": _SALT_TO_BRANDS.get(m["salt"].lower().strip(), []),
+            })
+        if len(results) >= 10:
+            break
+    return {"results": results}
+
+
+@app.post("/api/medicines/lookup")
+def lookup_medicines(request: MedicineLookupRequest):
+    """
+    Bulk lookup endpoint.
+    POST /api/medicines/lookup  Body: {"names": ["Crocin", "Metformin 500"]}
+    Returns enriched, deduplicated list.
+    """
+    seen_normalized: set[str] = set()
+    enriched: list[dict] = []
+    for raw_name in request.names:
+        norm = _normalize_name(raw_name)
+        if not norm or norm in seen_normalized:
+            continue
+        seen_normalized.add(norm)
+        enriched.append(_enrich_medicine(raw_name))
+    return {"known_medicines": enriched, "total": len(enriched)}
+
+
 # ─── RUN ─────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn

@@ -196,3 +196,8 @@ CREATE TRIGGER on_auth_user_created
 -- DONE! Tables: profiles, patients, doctors, consultations, prescriptions
 -- Run this in Supabase SQL Editor, then test!
 -- =============================================
+
+-- ── MIGRATION: Add known_medicines column for Known Medicines feature ────────
+-- Run this ONCE in Supabase SQL Editor if patients table already exists:
+ALTER TABLE public.patients ADD COLUMN IF NOT EXISTS known_medicines JSONB DEFAULT '[]';
+
